@@ -1,5 +1,27 @@
 [
   {
+    "id": "EN01",
+    "name": "ภาควิชาวิศวกรรมโยธา (EN01)",
+    "nameEn": "Civil Engineering Department",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473415,
+    "lng": 102.823818,
+    "description": "อาคารภาควิชาวิศวกรรมโยธา คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN01", "EN 01", "ตึกวิศวะ 1", "วิศวะโยธา", "Civil"]
+  },
+  {
+    "id": "EN02",
+    "name": "อาคารวิศวกรรม 2 (EN02)",
+    "nameEn": "Engineering Building 2",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473468,
+    "lng": 102.823890,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 2 ติดกับ EN01",
+    "aliases": ["EN02", "EN 02", "ตึกวิศวะ 2"]
+  },
+  {
     "id": "EN04",
     "name": "ภาควิชาวิศวกรรมศาสตร์คอมพิวเตอร์ (EN04)",
     "nameEn": "Engineering Building 4",
@@ -16,6 +38,160 @@
       "ตึกวิศวะคอม",
       "วิศวะคอม"
     ]
+  },
+  {
+    "id": "EN05",
+    "name": "ภาควิชาวิศวกรรมเกษตร (EN05)",
+    "nameEn": "Agricultural Engineering Department",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473052,
+    "lng": 102.822681,
+    "description": "อาคารภาควิชาวิศวกรรมเกษตร คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN05", "EN 05", "ตึกวิศวะ 5", "วิศวะเกษตร", "วิศวกรรมเกษตร", "Agricultural"]
+  },
+  {
+    "id": "EN06",
+    "name": "อาคารปฏิบัติการวิศวกรรมสิ่งแวดล้อม (EN06)",
+    "nameEn": "Environmental Engineering Lab Building",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472186,
+    "lng": 102.824959,
+    "description": "อาคารปฏิบัติการวิศวกรรมสิ่งแวดล้อม คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN06", "EN 06", "ตึกวิศวะ 6", "วิศวะสิ่งแวดล้อม", "Environmental"]
+  },
+  {
+    "id": "EN07",
+    "name": "อาคารปฏิบัติการวิศวกรรมเครื่องกล (EN07)",
+    "nameEn": "Mechanical Engineering Lab Building",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473270,
+    "lng": 102.822019,
+    "description": "อาคารปฏิบัติการวิศวกรรมเครื่องกล คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN07", "EN 07", "ตึกวิศวะ 7", "วิศวะเครื่องกล", "Mechanical"]
+  },
+  {
+    "id": "EN08",
+    "name": "อาคารวิศวกรรม 8 (EN08)",
+    "nameEn": "Engineering Building 8",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.471940,
+    "lng": 102.822531,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 8 บริเวณภาควิชาวิศวกรรมอุตสาหการ",
+    "aliases": ["EN08", "EN 08", "ตึกวิศวะ 8"]
+  },
+  {
+    "id": "EN09",
+    "name": "ตึกโครงเหล็ก (EN09)",
+    "nameEn": "Steel Frame Building",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.471975,
+    "lng": 102.822580,
+    "description": "ตึกโครงเหล็ก คณะวิศวกรรมศาสตร์ ใช้ในงานทดลองและปฏิบัติการ",
+    "aliases": ["EN09", "EN 09", "ตึกวิศวะ 9", "ตึกโครงเหล็ก", "Steel Frame"]
+  },
+  {
+    "id": "EN10",
+    "name": "อาคารวิศวกรรม 10 (EN10)",
+    "nameEn": "Engineering Building 10",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.471905,
+    "lng": 102.822480,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 10",
+    "aliases": ["EN10", "EN 10", "ตึกวิศวะ 10"]
+  },
+  {
+    "id": "EN11",
+    "name": "ภาควิชาวิศวกรรมไฟฟ้า (EN11)",
+    "nameEn": "Electrical Engineering Department",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472070,
+    "lng": 102.825791,
+    "description": "อาคารภาควิชาวิศวกรรมไฟฟ้า คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN11", "EN 11", "ตึกวิศวะ 11", "วิศวะไฟฟ้า", "Electrical"]
+  },
+  {
+    "id": "EN12",
+    "name": "อาคารวิศวกรรม 12 (EN12)",
+    "nameEn": "Engineering Building 12",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472628,
+    "lng": 102.822837,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 12",
+    "aliases": ["EN12", "EN 12", "ตึกวิศวะ 12"]
+  },
+  {
+    "id": "EN13",
+    "name": "อาคารวิศวกรรม 13 (EN13)",
+    "nameEn": "Engineering Building 13",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473100,
+    "lng": 102.822730,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 13 บริเวณภาควิชาวิศวกรรมเกษตร",
+    "aliases": ["EN13", "EN 13", "ตึกวิศวะ 13"]
+  },
+  {
+    "id": "EN14",
+    "name": "ภาควิชาวิศวกรรมเคมี (EN14)",
+    "nameEn": "Chemical Engineering Department",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.471728,
+    "lng": 102.823643,
+    "description": "อาคารภาควิชาวิศวกรรมเคมี คณะวิศวกรรมศาสตร์",
+    "aliases": ["EN14", "EN 14", "ตึกวิศวะ 14", "วิศวะเคมี", "Chemical"]
+  },
+  {
+    "id": "EN15",
+    "name": "อาคารวิศวกรรม 15 (EN15)",
+    "nameEn": "Engineering Building 15",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472333,
+    "lng": 102.823956,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 15",
+    "aliases": ["EN15", "EN 15", "ตึกวิศวะ 15"]
+  },
+  {
+    "id": "EN16",
+    "name": "อาคารวิศวกรรม 16 (EN16)",
+    "nameEn": "Engineering Building 16",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472370,
+    "lng": 102.824010,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 16 ติดกับ EN15",
+    "aliases": ["EN16", "EN 16", "ตึกวิศวะ 16"]
+  },
+  {
+    "id": "EN17",
+    "name": "อาคารวิศวกรรม 17 (EN17)",
+    "nameEn": "Engineering Building 17",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473026,
+    "lng": 102.825426,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ ตึก 17",
+    "aliases": ["EN17", "EN 17", "ตึกวิศวะ 17"]
+  },
+  {
+    "id": "EN18",
+    "name": "อาคาร 50 ปี คณะวิศวกรรมศาสตร์ (EN18)",
+    "nameEn": "50th Anniversary Engineering Building",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.473382,
+    "lng": 102.823308,
+    "description": "อาคาร 50 ปี คณะวิศวกรรมศาสตร์ ใช้สำหรับการเรียนการสอนและกิจกรรมส่วนกลาง",
+    "aliases": ["EN18", "EN 18", "ตึกวิศวะ 18", "ตึก 50 ปี", "อาคาร 50 ปี", "50 ปี"]
   },
   {
     "id": "engineering",
