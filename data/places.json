@@ -285,8 +285,8 @@
     "name": "คณะวิศวกรรมศาสตร์",
     "nameEn": "Faculty of Engineering",
     "category": "faculty",
-    "lat": 16.4745,
-    "lng": 102.8252,
+    "lat": 16.47264356721596,
+    "lng": 102.82392024993898,
     "description": "คณะวิศวกรรมศาสตร์ มหาวิทยาลัยขอนแก่น",
     "aliases": [
       "วิศวะ",
@@ -319,19 +319,6 @@
     "aliases": [
       "โรงอาหารวิศวะ",
       "Food Court"
-    ]
-  },
-  {
-    "id": "sala-phra-rachathan",
-    "name": "ศาลาพระราชทานปริญญาบัตร",
-    "nameEn": "Graduation Hall",
-    "category": "landmark",
-    "lat": 16.4768,
-    "lng": 102.821,
-    "description": "สถานที่สำคัญสำหรับพิธีพระราชทานปริญญาบัตร",
-    "aliases": [
-      "ศาลา",
-      "ศาลาพระราชทาน"
     ]
   }
 ]
