@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { searchPlaces } from "@/lib/search";
+import { buildFuse, searchPlaces } from "@/lib/search";
 import { CATEGORY_MAP, type Place } from "@/lib/types";
 import Glyph from "./Glyph";
 
 interface Props {
+  places: Place[];
   onSelect: (place: Place) => void;
 }
 
-export default function SearchBar({ onSelect }: Props) {
+export default function SearchBar({ places, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -18,7 +19,8 @@ export default function SearchBar({ onSelect }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const results = useMemo(() => searchPlaces(query), [query]);
+  const fuse = useMemo(() => buildFuse(places), [places]);
+  const results = useMemo(() => searchPlaces(fuse, query), [fuse, query]);
   const showDropdown = open && query.trim().length > 0;
 
   useEffect(() => {

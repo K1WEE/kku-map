@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readZones, writeZones } from "@/lib/admin/dataStore";
 import { zoneSchema } from "@/lib/admin/schemas";
+import { createServiceClient } from "@/lib/supabase/server";
+import {
+  rowFromZone,
+  zoneFromRow,
+  type ZoneRow,
+} from "@/lib/supabase/types";
 import type { Zone } from "@/lib/types";
 
+// See places/route.ts for the dev-only gating rationale.
 function devOnly(): NextResponse | null {
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.json({ error: "Not available" }, { status: 403 });
@@ -28,8 +34,15 @@ function validationError(issues: unknown): NextResponse {
 export async function GET() {
   const guard = devOnly();
   if (guard) return guard;
-  const zones = await readZones();
-  return NextResponse.json(zones);
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("zones")
+    .select("*")
+    .returns<ZoneRow[]>();
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json((data ?? []).map(zoneFromRow));
 }
 
 export async function POST(req: NextRequest) {
@@ -37,15 +50,18 @@ export async function POST(req: NextRequest) {
   if (guard) return guard;
   const body = await req.json();
   const parsed = zoneSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(parsed.error.issues);
+  if (!parsed.success) return validationError(parsed.error.issues);
+
+  const supabase = createServiceClient();
+  const row = rowFromZone(parsed.data as Zone);
+  const { error } = await supabase.from("zones").insert(row);
+
+  if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "id ซ้ำ" }, { status: 409 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const zones = await readZones();
-  if (zones.some((z) => z.id === parsed.data.id)) {
-    return NextResponse.json({ error: "id ซ้ำ" }, { status: 409 });
-  }
-  const next = [...zones, parsed.data as Zone];
-  await writeZones(next);
   return NextResponse.json(parsed.data, { status: 201 });
 }
 
@@ -54,17 +70,21 @@ export async function PUT(req: NextRequest) {
   if (guard) return guard;
   const body = await req.json();
   const parsed = zoneSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(parsed.error.issues);
+  if (!parsed.success) return validationError(parsed.error.issues);
+
+  const supabase = createServiceClient();
+  const row = rowFromZone(parsed.data as Zone);
+  const { error, count } = await supabase
+    .from("zones")
+    .update(row, { count: "exact" })
+    .eq("id", parsed.data.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const zones = await readZones();
-  const idx = zones.findIndex((z) => z.id === parsed.data.id);
-  if (idx === -1) {
+  if (!count) {
     return NextResponse.json({ error: "ไม่พบ id" }, { status: 404 });
   }
-  const next = [...zones];
-  next[idx] = parsed.data as Zone;
-  await writeZones(next);
   return NextResponse.json(parsed.data);
 }
 
@@ -75,11 +95,17 @@ export async function DELETE(req: NextRequest) {
   if (!id) {
     return NextResponse.json({ error: "missing id" }, { status: 400 });
   }
-  const zones = await readZones();
-  const next = zones.filter((z) => z.id !== id);
-  if (next.length === zones.length) {
+  const supabase = createServiceClient();
+  const { error, count } = await supabase
+    .from("zones")
+    .delete({ count: "exact" })
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!count) {
     return NextResponse.json({ error: "ไม่พบ id" }, { status: 404 });
   }
-  await writeZones(next);
   return NextResponse.json({ ok: true });
 }

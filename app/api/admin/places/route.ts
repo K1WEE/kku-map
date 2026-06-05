@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readPlaces, writePlaces } from "@/lib/admin/dataStore";
 import { placeSchema } from "@/lib/admin/schemas";
+import { createServiceClient } from "@/lib/supabase/server";
+import {
+  placeFromRow,
+  rowFromPlace,
+  type PlaceRow,
+} from "@/lib/supabase/types";
 import type { Place } from "@/lib/types";
 
+/**
+ * Admin CRUD over the `places` table.
+ *
+ * Currently dev-only — Phase 4 will swap this for Supabase-auth gating
+ * (signed-in user + profile.is_admin). For now we keep the existing dev
+ * workflow working while data moves to Postgres.
+ *
+ * Uses the service-role client to bypass RLS. The dev-only guard is what
+ * keeps this safe in production until Phase 4 lands.
+ */
 function devOnly(): NextResponse | null {
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.json({ error: "Not available" }, { status: 403 });
@@ -28,8 +43,15 @@ function validationError(issues: unknown): NextResponse {
 export async function GET() {
   const guard = devOnly();
   if (guard) return guard;
-  const places = await readPlaces();
-  return NextResponse.json(places);
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("places")
+    .select("*")
+    .returns<PlaceRow[]>();
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json((data ?? []).map(placeFromRow));
 }
 
 export async function POST(req: NextRequest) {
@@ -37,15 +59,19 @@ export async function POST(req: NextRequest) {
   if (guard) return guard;
   const body = await req.json();
   const parsed = placeSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(parsed.error.issues);
+  if (!parsed.success) return validationError(parsed.error.issues);
+
+  const supabase = createServiceClient();
+  const row = rowFromPlace(parsed.data as Place);
+  const { error } = await supabase.from("places").insert(row);
+
+  if (error) {
+    if (error.code === "23505") {
+      // unique_violation on primary key
+      return NextResponse.json({ error: "id ซ้ำ" }, { status: 409 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const places = await readPlaces();
-  if (places.some((p) => p.id === parsed.data.id)) {
-    return NextResponse.json({ error: "id ซ้ำ" }, { status: 409 });
-  }
-  const next = [...places, parsed.data as Place];
-  await writePlaces(next);
   return NextResponse.json(parsed.data, { status: 201 });
 }
 
@@ -54,17 +80,21 @@ export async function PUT(req: NextRequest) {
   if (guard) return guard;
   const body = await req.json();
   const parsed = placeSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(parsed.error.issues);
+  if (!parsed.success) return validationError(parsed.error.issues);
+
+  const supabase = createServiceClient();
+  const row = rowFromPlace(parsed.data as Place);
+  const { error, count } = await supabase
+    .from("places")
+    .update(row, { count: "exact" })
+    .eq("id", parsed.data.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const places = await readPlaces();
-  const idx = places.findIndex((p) => p.id === parsed.data.id);
-  if (idx === -1) {
+  if (!count) {
     return NextResponse.json({ error: "ไม่พบ id" }, { status: 404 });
   }
-  const next = [...places];
-  next[idx] = parsed.data as Place;
-  await writePlaces(next);
   return NextResponse.json(parsed.data);
 }
 
@@ -75,11 +105,17 @@ export async function DELETE(req: NextRequest) {
   if (!id) {
     return NextResponse.json({ error: "missing id" }, { status: 400 });
   }
-  const places = await readPlaces();
-  const next = places.filter((p) => p.id !== id);
-  if (next.length === places.length) {
+  const supabase = createServiceClient();
+  const { error, count } = await supabase
+    .from("places")
+    .delete({ count: "exact" })
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!count) {
     return NextResponse.json({ error: "ไม่พบ id" }, { status: 404 });
   }
-  await writePlaces(next);
   return NextResponse.json({ ok: true });
 }

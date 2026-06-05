@@ -5,13 +5,8 @@ import { MapContainer, TileLayer, Polygon, Tooltip, useMap } from "react-leaflet
 import L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
-import placesData from "@/data/places.json";
-import zonesData from "@/data/zones.json";
 import { CATEGORY_MAP, type CategoryId, type Place, type Zone } from "@/lib/types";
 import { glyphSvg } from "@/lib/icons";
-
-const places = placesData as Place[];
-const zones = zonesData as Zone[];
 
 const KKU_CENTER: [number, number] = [16.4756, 102.8235];
 
@@ -106,6 +101,8 @@ export interface FlyTarget {
 }
 
 interface Props {
+  places: Place[];
+  zones: Zone[];
   flyTarget: FlyTarget | null;
   selectedId: string | null;
   activeCategories: Set<CategoryId>;
@@ -115,9 +112,11 @@ interface Props {
 }
 
 function FlyToSelected({
+  places,
   flyTarget,
   sheetOffsetRatio = 0.22,
 }: {
+  places: Place[];
   flyTarget: FlyTarget | null;
   sheetOffsetRatio?: number;
 }) {
@@ -138,7 +137,7 @@ function FlyToSelected({
     } else {
       map.flyTo(target, targetZoom, { duration: 0.7 });
     }
-  }, [flyTarget, map, sheetOffsetRatio]);
+  }, [places, flyTarget, map, sheetOffsetRatio]);
   return null;
 }
 
@@ -148,10 +147,12 @@ function FlyToSelected({
  * chip) is the whole point of this component.
  */
 function MarkersLayer({
+  places,
   selectedId,
   activeCategories,
   onSelectPlace,
 }: {
+  places: Place[];
   selectedId: string | null;
   activeCategories: Set<CategoryId>;
   onSelectPlace: (place: Place) => void;
@@ -196,7 +197,7 @@ function MarkersLayer({
       groupRef.current = null;
       markersRef.current = {};
     };
-  }, [activeCategories, onSelectPlace, map, selectedId]);
+  }, [places, activeCategories, onSelectPlace, map, selectedId]);
 
   // Swap icons when zoom crosses the chip threshold.
   useEffect(() => {
@@ -215,7 +216,7 @@ function MarkersLayer({
     return () => {
       map.off("zoomend", refresh);
     };
-  }, [activeCategories, selectedId, map]);
+  }, [places, activeCategories, selectedId, map]);
 
   // When `selectedId` changes within the same tier, refresh just the affected
   // markers so the selection ring tracks state without a tier swap.
@@ -225,12 +226,14 @@ function MarkersLayer({
       const p = places.find((pp) => pp.id === id);
       if (p) marker.setIcon(iconFor(p, id === selectedId, z));
     }
-  }, [selectedId, map]);
+  }, [places, selectedId, map]);
 
   return null;
 }
 
 export default function Map({
+  places,
+  zones,
   flyTarget,
   selectedId,
   activeCategories,
@@ -278,12 +281,17 @@ export default function Map({
         ))}
 
       <MarkersLayer
+        places={places}
         selectedId={selectedId}
         activeCategories={activeCategories}
         onSelectPlace={onSelectPlace}
       />
 
-      <FlyToSelected flyTarget={flyTarget} sheetOffsetRatio={sheetOffsetRatio} />
+      <FlyToSelected
+        places={places}
+        flyTarget={flyTarget}
+        sheetOffsetRatio={sheetOffsetRatio}
+      />
     </MapContainer>
   );
 }

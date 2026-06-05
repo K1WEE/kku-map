@@ -43,6 +43,12 @@
       "skillPath": "skills/subagent-driven-development/SKILL.md",
       "computedHash": "b38be2f3a092d758127f6d47e77c2493885aebf38aae359e4c786df2c343b837"
     },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "efc547df91cc56b69792532db54607027884cb5873718c7ca1ebf6d6f1e4cb53"
+    },
     "systematic-debugging": {
       "source": "obra/superpowers",
       "sourceType": "github",
