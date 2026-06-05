@@ -1,0 +1,74 @@
+[
+  {
+    "id": "EN04",
+    "name": "ภาควิชาวิศวกรรมศาสตร์คอมพิวเตอร์ (EN04)",
+    "nameEn": "Engineering Building 4",
+    "faculty": "engineering",
+    "category": "building",
+    "lat": 16.472414001477887,
+    "lng": 102.82565793550262,
+    "description": "อาคารเรียนคณะวิศวกรรมศาสตร์ สาขาวิศวกรรมคอมพิวเตอร์ ที่นักศึกษาวิศวะคอมใช้เรียนเป็นหลัก",
+    "aliases": [
+      "EN04",
+      "EN 04",
+      "ตึกวิศวะ 4",
+      "อาคารเรียนรวมวิศวะ",
+      "ตึกวิศวะคอม",
+      "วิศวะคอม"
+    ]
+  },
+  {
+    "id": "engineering",
+    "name": "คณะวิศวกรรมศาสตร์",
+    "nameEn": "Faculty of Engineering",
+    "category": "faculty",
+    "lat": 16.4745,
+    "lng": 102.8252,
+    "description": "คณะวิศวกรรมศาสตร์ มหาวิทยาลัยขอนแก่น",
+    "aliases": [
+      "วิศวะ",
+      "Engineering",
+      "EN"
+    ]
+  },
+  {
+    "id": "central-library",
+    "name": "สำนักหอสมุด มหาวิทยาลัยขอนแก่น",
+    "nameEn": "KKU Central Library",
+    "category": "library",
+    "lat": 16.476639931426554,
+    "lng": 102.82343024015314,
+    "description": "หอสมุดกลาง เปิดให้บริการนักศึกษาทุกคณะ",
+    "aliases": [
+      "หอสมุด",
+      "ห้องสมุดกลาง",
+      "Library"
+    ]
+  },
+  {
+    "id": "engineering-food-court",
+    "name": "โรงอาหารคณะวิศวกรรมศาสตร์",
+    "nameEn": "Engineering Food Court",
+    "category": "food",
+    "lat": 16.473295983455394,
+    "lng": 102.82438681272998,
+    "description": "โรงอาหารคณะวิศวกรรมศาสตร์ มีร้านอาหารหลากหลาย",
+    "aliases": [
+      "โรงอาหารวิศวะ",
+      "Food Court"
+    ]
+  },
+  {
+    "id": "sala-phra-rachathan",
+    "name": "ศาลาพระราชทานปริญญาบัตร",
+    "nameEn": "Graduation Hall",
+    "category": "landmark",
+    "lat": 16.4768,
+    "lng": 102.8210,
+    "description": "สถานที่สำคัญสำหรับพิธีพระราชทานปริญญาบัตร",
+    "aliases": [
+      "ศาลา",
+      "ศาลาพระราชทาน"
+    ]
+  }
+]
