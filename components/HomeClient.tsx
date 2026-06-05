@@ -5,6 +5,7 @@ import { useState } from "react";
 import SearchBar from "@/components/SearchBar";
 import FilterChips from "@/components/FilterChips";
 import PlaceSheet from "@/components/PlaceSheet";
+import AuthButton from "@/components/AuthButton";
 import type { FlyTarget } from "@/components/Map";
 import { CATEGORIES, type CategoryId, type Place, type Zone } from "@/lib/types";
 
@@ -75,10 +76,17 @@ export default function HomeClient({ places, zones }: Props) {
         onClickCapture={dismissHint}
       >
         <div className="pointer-events-auto mx-auto max-w-screen-sm">
-          <SearchBar
-            places={places}
-            onSelect={(p) => openPlace(p, { zoom: 18 })}
-          />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <SearchBar
+                places={places}
+                onSelect={(p) => openPlace(p, { zoom: 18 })}
+              />
+            </div>
+            <div className="shrink-0">
+              <AuthButton />
+            </div>
+          </div>
           <div
             aria-hidden={!showHint}
             className={`mx-auto mt-2 w-fit max-w-full rounded-full bg-(--color-ink-900) px-3 py-1 text-center text-[11px] font-medium text-(--color-ink-0) shadow-md transition-opacity duration-(--motion-base) ${
