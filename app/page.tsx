@@ -1,8 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
-import type L from "leaflet";
+import { useState } from "react";
 import SearchBar from "@/components/SearchBar";
 import FilterChips from "@/components/FilterChips";
 import PlaceSheet from "@/components/PlaceSheet";
@@ -26,7 +25,6 @@ export default function Home() {
   );
   const [showZones, setShowZones] = useState(true);
   const [showHint, setShowHint] = useState(true);
-  const markerRefs = useRef<Record<string, L.Marker | null>>({});
 
   function dismissHint() {
     if (!showHint) return;
@@ -59,7 +57,6 @@ export default function Home() {
       <Map
         flyTarget={flyTarget}
         selectedId={selectedPlace?.id ?? null}
-        markerRefs={markerRefs}
         activeCategories={activeCategories}
         showZones={showZones}
         onSelectPlace={(p) => openPlace(p)}
