@@ -35,6 +35,7 @@ export default function HomeClient({ places, zones }: Props) {
   );
   const [showZones, setShowZones] = useState(true);
   const [showHint, setShowHint] = useState(true);
+  const [highlightedZoneId, setHighlightedZoneId] = useState<string | null>(null);
 
   // Realtime: when admin approves/edits a place anywhere, every open map
   // refreshes. router.refresh() re-runs the server component (which fetches
@@ -54,7 +55,28 @@ export default function HomeClient({ places, zones }: Props) {
       setActiveCategories((prev) => new Set(prev).add(place.category));
     }
     setSelectedPlace(place);
-    setFlyTarget({ placeId: place.id, zoom: opts.zoom, nonce: Date.now() });
+    setFlyTarget({
+      kind: "place",
+      placeId: place.id,
+      zoom: opts.zoom,
+      nonce: Date.now(),
+    });
+    dismissHint();
+  }
+
+  function openZone(zone: Zone) {
+    // Make sure zones are visible — selecting an invisible zone otherwise
+    // flies the camera but draws nothing.
+    if (!showZones) setShowZones(true);
+    setSelectedPlace(null);
+    setFlyTarget({ kind: "zone", zoneId: zone.id, nonce: Date.now() });
+    setHighlightedZoneId(zone.id);
+    // Auto-clear the highlight after the fly animation so we don't keep a
+    // thick stroke permanently. The cleanup is purely cosmetic; if the
+    // user navigates again before the timer fires, that override wins.
+    window.setTimeout(() => {
+      setHighlightedZoneId((current) => (current === zone.id ? null : current));
+    }, 3000);
     dismissHint();
   }
 
@@ -77,6 +99,7 @@ export default function HomeClient({ places, zones }: Props) {
         zones={zones}
         flyTarget={flyTarget}
         selectedId={selectedPlace?.id ?? null}
+        highlightedZoneId={highlightedZoneId}
         activeCategories={activeCategories}
         showZones={showZones}
         onSelectPlace={(p) => openPlace(p, { zoom: 18 })}
@@ -92,7 +115,9 @@ export default function HomeClient({ places, zones }: Props) {
             <div className="min-w-0 flex-1">
               <SearchBar
                 places={places}
-                onSelect={(p) => openPlace(p, { zoom: 18 })}
+                zones={zones}
+                onSelectPlace={(p) => openPlace(p, { zoom: 18 })}
+                onSelectZone={openZone}
               />
             </div>
             <div className="shrink-0">

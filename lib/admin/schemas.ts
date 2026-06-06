@@ -32,6 +32,7 @@ export const zoneSchema = z.object({
   polygon: z
     .array(z.tuple([z.number().finite(), z.number().finite()]))
     .min(3, "polygon ต้องมีอย่างน้อย 3 จุด"),
+  aliases: z.array(z.string().min(1)).optional(),
 });
 
 export type PlaceInput = z.infer<typeof placeSchema>;

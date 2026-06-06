@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { buildFuse, searchPlaces } from "@/lib/search";
-import { CATEGORY_MAP, type Place } from "@/lib/types";
+import { buildIndex, searchAll, type SearchResult } from "@/lib/search";
+import { CATEGORY_MAP, type Place, type Zone } from "@/lib/types";
 import Glyph from "./Glyph";
 
 interface Props {
   places: Place[];
-  onSelect: (place: Place) => void;
+  zones: Zone[];
+  onSelectPlace: (place: Place) => void;
+  onSelectZone: (zone: Zone) => void;
 }
 
-export default function SearchBar({ places, onSelect }: Props) {
+export default function SearchBar({
+  places,
+  zones,
+  onSelectPlace,
+  onSelectZone,
+}: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -19,8 +26,8 @@ export default function SearchBar({ places, onSelect }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const fuse = useMemo(() => buildFuse(places), [places]);
-  const results = useMemo(() => searchPlaces(fuse, query), [fuse, query]);
+  const index = useMemo(() => buildIndex(places, zones), [places, zones]);
+  const results = useMemo(() => searchAll(index, query), [index, query]);
   const showDropdown = open && query.trim().length > 0;
 
   useEffect(() => {
@@ -39,9 +46,14 @@ export default function SearchBar({ places, onSelect }: Props) {
     li?.scrollIntoView({ block: "nearest" });
   }, [active, showDropdown]);
 
-  function handleSelect(place: Place) {
-    onSelect(place);
-    setQuery(place.name);
+  function handleSelect(result: SearchResult) {
+    if (result.kind === "place") {
+      onSelectPlace(result.place);
+      setQuery(result.place.name);
+    } else {
+      onSelectZone(result.zone);
+      setQuery(result.zone.name);
+    }
     setOpen(false);
     inputRef.current?.blur();
   }
@@ -98,7 +110,7 @@ export default function SearchBar({ places, onSelect }: Props) {
           aria-controls="kku-search-listbox"
           aria-activedescendant={
             showDropdown && results[active]
-              ? `kku-result-${results[active].id}`
+              ? `kku-result-${resultId(results[active])}`
               : undefined
           }
           autoComplete="off"
@@ -157,15 +169,15 @@ export default function SearchBar({ places, onSelect }: Props) {
               <span className="font-medium text-(--color-ink-800)">EN04</span>
             </li>
           ) : (
-            results.map((p, i) => {
-              const cat = CATEGORY_MAP[p.category];
+            results.map((r, i) => {
               const isActive = i === active;
+              const id = resultId(r);
               return (
                 <li
-                  key={p.id}
+                  key={`${r.kind}:${id}`}
                   data-idx={i}
                   role="option"
-                  id={`kku-result-${p.id}`}
+                  id={`kku-result-${id}`}
                   aria-selected={isActive}
                 >
                   <button
@@ -173,31 +185,17 @@ export default function SearchBar({ places, onSelect }: Props) {
                     onMouseEnter={() => setActive(i)}
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      handleSelect(p);
+                      handleSelect(r);
                     }}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition ${
                       isActive ? "bg-(--color-ink-50)" : ""
                     }`}
                   >
-                    <span
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
-                      style={{ background: cat.color }}
-                    >
-                      <Glyph id={cat.id} size={18} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-medium text-(--color-ink-800)">
-                        {p.name}
-                      </span>
-                      <span className="block truncate text-xs text-(--color-ink-500)">
-                        {cat.label}
-                        {p.nameEn ? ` · ${p.nameEn}` : ""}
-                        {p.faculty ? ` · ${p.faculty}` : ""}
-                      </span>
-                    </span>
-                    <span className="shrink-0 rounded-md bg-(--color-ink-100) px-1.5 py-0.5 font-mono text-[10px] text-(--color-ink-600)">
-                      {p.id}
-                    </span>
+                    {r.kind === "place" ? (
+                      <PlaceResultRow place={r.place} />
+                    ) : (
+                      <ZoneResultRow zone={r.zone} />
+                    )}
                   </button>
                 </li>
               );
@@ -206,5 +204,78 @@ export default function SearchBar({ places, onSelect }: Props) {
         </ul>
       )}
     </div>
+  );
+}
+
+function resultId(r: SearchResult): string {
+  return r.kind === "place" ? r.place.id : r.zone.id;
+}
+
+function PlaceResultRow({ place }: { place: Place }) {
+  const cat = CATEGORY_MAP[place.category];
+  return (
+    <>
+      <span
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
+        style={{ background: cat?.color ?? "var(--color-ink-400)" }}
+      >
+        {cat && <Glyph id={cat.id} size={18} />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-medium text-(--color-ink-800)">
+          {place.name}
+        </span>
+        <span className="block truncate text-xs text-(--color-ink-500)">
+          {cat?.label ?? "สถานที่"}
+          {place.nameEn ? ` · ${place.nameEn}` : ""}
+          {place.faculty ? ` · ${place.faculty}` : ""}
+        </span>
+      </span>
+      <span className="shrink-0 rounded-md bg-(--color-ink-100) px-1.5 py-0.5 font-mono text-[10px] text-(--color-ink-600)">
+        {place.id}
+      </span>
+    </>
+  );
+}
+
+/**
+ * Zone result reads visually distinct from a place result: a polygon-shaped
+ * swatch tinted with the zone's own color signals "พื้นที่" instead of a
+ * single point, and the secondary line says "พื้นที่คณะ" so the user knows
+ * they're picking an area rather than a marker.
+ */
+function ZoneResultRow({ zone }: { zone: Zone }) {
+  return (
+    <>
+      <span
+        aria-hidden
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-2 ring-inset"
+        style={{
+          background: `color-mix(in oklch, ${zone.color} 18%, transparent)`,
+          // ring color matches the zone's brand-side stroke
+          // (no token because zones carry arbitrary palette)
+          ["--tw-ring-color" as never]: zone.color,
+        }}
+      >
+        <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden>
+          <path
+            d="M5 8 L14 4 L20 9 L19 17 L10 20 L5 15 Z"
+            fill={zone.color}
+            opacity="0.65"
+            stroke={zone.color}
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-medium text-(--color-ink-800)">
+          {zone.name}
+        </span>
+        <span className="block truncate text-xs text-(--color-ink-500)">
+          พื้นที่คณะ{zone.nameEn ? ` · ${zone.nameEn}` : ""}
+        </span>
+      </span>
+    </>
   );
 }

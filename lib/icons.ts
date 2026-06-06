@@ -9,8 +9,6 @@ import type { CategoryId } from "./types";
 export const CATEGORY_GLYPH: Record<CategoryId, string> = {
   building:
     "M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18 M2 22h20 M10 6h4 M10 10h4 M10 14h4 M10 18h4",
-  faculty:
-    "M22 10 12 5 2 10l10 5 10-5v6 M6 12v5c0 2 3 3 6 3s6-1 6-3v-5",
   dorm: "M3 10.5 12 3l9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22v-7h6v7",
   food: "M4 3v8a3 3 0 0 0 3 3v8 M10 3v8a3 3 0 0 1-3 3 M7 3v8 M20 3c-2 1-3 4-3 7v4h3v8",
   library:

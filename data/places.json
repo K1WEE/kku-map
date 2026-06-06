@@ -281,20 +281,6 @@
     ]
   },
   {
-    "id": "engineering",
-    "name": "คณะวิศวกรรมศาสตร์",
-    "nameEn": "Faculty of Engineering",
-    "category": "faculty",
-    "lat": 16.47264356721596,
-    "lng": 102.82392024993898,
-    "description": "คณะวิศวกรรมศาสตร์ มหาวิทยาลัยขอนแก่น",
-    "aliases": [
-      "วิศวะ",
-      "Engineering",
-      "EN"
-    ]
-  },
-  {
     "id": "central-library",
     "name": "สำนักหอสมุด มหาวิทยาลัยขอนแก่น",
     "nameEn": "KKU Central Library",

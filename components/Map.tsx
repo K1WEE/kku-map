@@ -94,17 +94,21 @@ function clusterIcon(count: number) {
   });
 }
 
-export interface FlyTarget {
-  placeId: string;
-  zoom?: number;
-  nonce: number;
-}
+/**
+ * FlyTarget is now discriminated — same nonce pattern, but the target can
+ * be a place (existing behaviour: fly + sheet-aware offset) or a zone
+ * (fit-bounds to the polygon).
+ */
+export type FlyTarget =
+  | { kind: "place"; placeId: string; zoom?: number; nonce: number }
+  | { kind: "zone"; zoneId: string; nonce: number };
 
 interface Props {
   places: Place[];
   zones: Zone[];
   flyTarget: FlyTarget | null;
   selectedId: string | null;
+  highlightedZoneId?: string | null;
   activeCategories: Set<CategoryId>;
   showZones: boolean;
   onSelectPlace: (place: Place) => void;
@@ -113,16 +117,42 @@ interface Props {
 
 function FlyToSelected({
   places,
+  zones,
   flyTarget,
   sheetOffsetRatio = 0.22,
 }: {
   places: Place[];
+  zones: Zone[];
   flyTarget: FlyTarget | null;
   sheetOffsetRatio?: number;
 }) {
   const map = useMap();
   useEffect(() => {
     if (!flyTarget) return;
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (flyTarget.kind === "zone") {
+      const zone = zones.find((z) => z.id === flyTarget.zoneId);
+      if (!zone || zone.polygon.length === 0) return;
+      const bounds = L.latLngBounds(
+        zone.polygon.map(([lat, lng]) => L.latLng(lat, lng)),
+      );
+      if (reduce) {
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
+      } else {
+        map.flyToBounds(bounds, {
+          padding: [60, 60],
+          maxZoom: 17,
+          duration: 0.7,
+        });
+      }
+      return;
+    }
+
+    // place
     const place = places.find((p) => p.id === flyTarget.placeId);
     if (!place) return;
     // `flyTarget.zoom` is a MINIMUM — we never zoom out from where the user
@@ -133,15 +163,12 @@ function FlyToSelected({
     const point = map.project([place.lat, place.lng], targetZoom);
     const offsetY = map.getSize().y * sheetOffsetRatio;
     const target = map.unproject(point.add([0, offsetY]), targetZoom);
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
       map.setView(target, targetZoom, { animate: false });
     } else {
       map.flyTo(target, targetZoom, { duration: 0.7 });
     }
-  }, [places, flyTarget, map, sheetOffsetRatio]);
+  }, [places, zones, flyTarget, map, sheetOffsetRatio]);
   return null;
 }
 
@@ -240,6 +267,7 @@ export default function Map({
   zones,
   flyTarget,
   selectedId,
+  highlightedZoneId,
   activeCategories,
   showZones,
   onSelectPlace,
@@ -263,26 +291,29 @@ export default function Map({
       />
 
       {showZones &&
-        zones.map((z) => (
-          <Polygon
-            key={z.id}
-            positions={z.polygon}
-            pathOptions={{
-              color: z.color,
-              weight: 1.5,
-              opacity: 0.7,
-              fillColor: z.color,
-              fillOpacity: 0.12,
-            }}
-          >
-            <Tooltip sticky direction="top" opacity={0.95}>
-              <div className="text-xs font-medium">{z.name}</div>
-              {z.nameEn && (
-                <div className="text-[10px] italic opacity-70">{z.nameEn}</div>
-              )}
-            </Tooltip>
-          </Polygon>
-        ))}
+        zones.map((z) => {
+          const highlighted = z.id === highlightedZoneId;
+          return (
+            <Polygon
+              key={z.id}
+              positions={z.polygon}
+              pathOptions={{
+                color: z.color,
+                weight: highlighted ? 3.5 : 1.5,
+                opacity: highlighted ? 1 : 0.7,
+                fillColor: z.color,
+                fillOpacity: highlighted ? 0.22 : 0.12,
+              }}
+            >
+              <Tooltip sticky direction="top" opacity={0.95}>
+                <div className="text-xs font-medium">{z.name}</div>
+                {z.nameEn && (
+                  <div className="text-[10px] italic opacity-70">{z.nameEn}</div>
+                )}
+              </Tooltip>
+            </Polygon>
+          );
+        })}
 
       <MarkersLayer
         places={places}
@@ -293,6 +324,7 @@ export default function Map({
 
       <FlyToSelected
         places={places}
+        zones={zones}
         flyTarget={flyTarget}
         sheetOffsetRatio={sheetOffsetRatio}
       />

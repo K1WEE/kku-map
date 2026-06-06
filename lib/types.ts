@@ -1,6 +1,5 @@
 export type CategoryId =
   | "building"
-  | "faculty"
   | "dorm"
   | "food"
   | "library"
@@ -33,7 +32,6 @@ export interface Place {
  */
 export const CATEGORIES: Category[] = [
   { id: "building", label: "ตึกเรียน", icon: "🏛️", color: "oklch(0.50 0.14 250)" },
-  { id: "faculty", label: "คณะ", icon: "🎓", color: "oklch(0.50 0.16 290)" },
   { id: "dorm", label: "หอพัก", icon: "🏠", color: "oklch(0.52 0.11 155)" },
   { id: "food", label: "ร้านอาหาร", icon: "🍜", color: "oklch(0.66 0.16 65)" },
   { id: "library", label: "ห้องสมุด", icon: "📚", color: "oklch(0.55 0.11 200)" },
@@ -46,6 +44,7 @@ export interface Zone {
   nameEn?: string;
   color: string;
   polygon: [number, number][];
+  aliases?: string[];
 }
 
 export const CATEGORY_MAP: Record<CategoryId, Category> = CATEGORIES.reduce(

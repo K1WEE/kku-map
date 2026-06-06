@@ -54,6 +54,7 @@ export interface ZoneRow {
   name_en: string | null;
   color: string;
   polygon: [number, number][];
+  aliases: string[];
   created_at: string;
   updated_at: string;
 }
@@ -137,6 +138,7 @@ export function zoneFromRow(row: ZoneRow): Zone {
     nameEn: row.name_en ?? undefined,
     color: row.color,
     polygon: row.polygon,
+    aliases: row.aliases ?? [],
   };
 }
 
@@ -163,5 +165,6 @@ export function rowFromZone(z: Zone): Omit<ZoneRow, "created_at" | "updated_at">
     name_en: z.nameEn ?? null,
     color: z.color,
     polygon: z.polygon,
+    aliases: z.aliases ?? [],
   };
 }
