@@ -36,3 +36,45 @@ export const zoneSchema = z.object({
 
 export type PlaceInput = z.infer<typeof placeSchema>;
 export type ZoneInput = z.infer<typeof zoneSchema>;
+
+// ---------------------------------------------------------------------------
+// Submission schemas — user contributions awaiting admin review.
+//
+// `placePayloadSchema` is intentionally looser than `placeSchema`: the user
+// doesn't pick the place `id` (admin assigns it at approve time), and
+// `aliases` is optional in payload but stored as `[]` in the row.
+// ---------------------------------------------------------------------------
+
+export const placePayloadSchema = z.object({
+  name: z.string().min(1, "ต้องมีชื่อ"),
+  nameEn: z.string().optional(),
+  faculty: z.string().optional(),
+  category: z.enum(categoryIds as [string, ...string[]]),
+  lat: z.number().finite(),
+  lng: z.number().finite(),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  aliases: z.array(z.string().min(1)).optional(),
+});
+
+const submissionBase = z.object({
+  note: z.string().max(1000).optional(),
+  // Honeypot: legitimate users never fill this. Form leaves it blank;
+  // a bot autofilling everything will set it and we reject server-side.
+  website: z.string().max(0).optional(),
+});
+
+export const submissionSchema = z.discriminatedUnion("type", [
+  submissionBase.extend({
+    type: z.literal("add"),
+    payload: placePayloadSchema,
+  }),
+  submissionBase.extend({
+    type: z.literal("edit"),
+    target_place_id: z.string().min(1, "ต้องระบุ place ที่จะแก้ไข"),
+    payload: placePayloadSchema,
+  }),
+]);
+
+export type PlacePayload = z.infer<typeof placePayloadSchema>;
+export type SubmissionInput = z.infer<typeof submissionSchema>;

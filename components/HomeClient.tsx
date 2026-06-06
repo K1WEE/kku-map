@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import FilterChips from "@/components/FilterChips";
 import PlaceSheet from "@/components/PlaceSheet";
 import AuthButton from "@/components/AuthButton";
+import SuggestFab from "@/components/SuggestFab";
 import type { FlyTarget } from "@/components/Map";
 import { CATEGORIES, type CategoryId, type Place, type Zone } from "@/lib/types";
 
@@ -67,7 +68,7 @@ export default function HomeClient({ places, zones }: Props) {
         selectedId={selectedPlace?.id ?? null}
         activeCategories={activeCategories}
         showZones={showZones}
-        onSelectPlace={(p) => openPlace(p)}
+        onSelectPlace={(p) => openPlace(p, { zoom: 18 })}
         sheetOffsetRatio={0.17}
       />
 
@@ -112,6 +113,8 @@ export default function HomeClient({ places, zones }: Props) {
           />
         </div>
       </div>
+
+      <SuggestFab />
 
       <PlaceSheet place={selectedPlace} onClose={() => setSelectedPlace(null)} />
     </main>

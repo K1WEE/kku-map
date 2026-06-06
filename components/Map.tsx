@@ -125,7 +125,11 @@ function FlyToSelected({
     if (!flyTarget) return;
     const place = places.find((p) => p.id === flyTarget.placeId);
     if (!place) return;
-    const targetZoom = flyTarget.zoom ?? map.getZoom();
+    // `flyTarget.zoom` is a MINIMUM — we never zoom out from where the user
+    // is. If they're already closer than the requested zoom (e.g. already
+    // looking at the chip), leave the camera where it is.
+    const requestedZoom = flyTarget.zoom ?? map.getZoom();
+    const targetZoom = Math.max(requestedZoom, map.getZoom());
     const point = map.project([place.lat, place.lng], targetZoom);
     const offsetY = map.getSize().y * sheetOffsetRatio;
     const target = map.unproject(point.add([0, offsetY]), targetZoom);

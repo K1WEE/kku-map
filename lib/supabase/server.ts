@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import type { Database } from "./types";
 
 /**
  * Server-side Supabase client, scoped to the current request.
@@ -12,11 +11,16 @@ import type { Database } from "./types";
  *   - server actions
  *
  * Respects RLS — operates as the signed-in user (or anon if no session).
+ *
+ * Untyped on purpose, same reason as `createServiceClient` below: the
+ * Database generic widens insert/update args to `never` in the current
+ * @supabase/supabase-js version. Type safety at the boundary is provided
+ * by Zod schemas; reads are narrowed via `.returns<...>()`.
  */
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

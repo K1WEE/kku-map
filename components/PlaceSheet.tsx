@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { CATEGORY_MAP, type Place } from "@/lib/types";
 import Glyph from "./Glyph";
 
@@ -161,6 +162,15 @@ export default function PlaceSheet({ place, onClose }: Props) {
                 <path d="M8 7h9v9" />
               </svg>
             </a>
+
+            <div className="mt-4 border-t border-(--color-ink-100) pt-3">
+              <Link
+                href={`/contribute/edit/${encodeURIComponent(place.id)}`}
+                className="flex w-full items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-[12px] text-(--color-ink-500) transition hover:text-(--color-ink-800) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-600)"
+              >
+                เห็นข้อมูลผิด? เสนอแก้ไข →
+              </Link>
+            </div>
           </div>
         )}
       </div>
