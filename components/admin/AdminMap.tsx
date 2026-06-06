@@ -30,6 +30,12 @@ interface Props {
   zones: Zone[];
   editMode: EditMode;
   draftMarker: { lat: number; lng: number } | null;
+  /**
+   * Optional original-position ghost marker for "review edit submission":
+   * shown as a muted dot with a dashed connector to draftMarker so admin
+   * sees how far the proposed point moved.
+   */
+  reviewOriginal?: { lat: number; lng: number } | null;
   draftPolygon: [number, number][];
   drawingActive: boolean;
   pickingFromMap: boolean;
@@ -73,6 +79,22 @@ function draftMarkerIcon() {
   });
 }
 
+function ghostMarkerIcon() {
+  return L.divIcon({
+    className: "kku-ghost-marker",
+    html: `<div style="
+      width:18px;height:18px;
+      border-radius:50%;
+      background:oklch(0.70 0 0);
+      border:2px solid white;
+      box-shadow:0 1px 4px rgba(0,0,0,0.3);
+      opacity:0.85;
+    "></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
 function MapClickHandler({
   enabled,
   onClick,
@@ -109,6 +131,7 @@ export default function AdminMap({
   zones,
   editMode,
   draftMarker,
+  reviewOriginal,
   draftPolygon,
   drawingActive,
   pickingFromMap,
@@ -193,6 +216,33 @@ export default function AdminMap({
           </Marker>
         );
       })}
+
+      {reviewOriginal && (
+        <Marker
+          position={[reviewOriginal.lat, reviewOriginal.lng]}
+          icon={ghostMarkerIcon()}
+          interactive={false}
+        >
+          <Tooltip direction="top" opacity={0.95}>
+            <div className="text-xs">ตำแหน่งเดิม</div>
+          </Tooltip>
+        </Marker>
+      )}
+
+      {reviewOriginal && draftMarker && (
+        <Polyline
+          positions={[
+            [reviewOriginal.lat, reviewOriginal.lng],
+            [draftMarker.lat, draftMarker.lng],
+          ]}
+          pathOptions={{
+            color: "oklch(0.50 0.015 25)",
+            weight: 1.5,
+            dashArray: "4,4",
+            opacity: 0.6,
+          }}
+        />
+      )}
 
       {draftMarker && (
         <Marker

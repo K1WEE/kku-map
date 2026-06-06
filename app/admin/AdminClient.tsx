@@ -75,6 +75,8 @@ export default function AdminClient() {
   const [zones, setZones] = useState<Zone[]>([]);
   const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("pending");
+  const [previewSubmission, setPreviewSubmission] =
+    useState<AdminSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState<EditMode>({ kind: "idle" });
   const [draftMarker, setDraftMarker] = useState<{ lat: number; lng: number } | null>(null);
@@ -131,6 +133,33 @@ export default function AdminClient() {
     () => submissions.filter((s) => s.status === "pending").length,
     [submissions],
   );
+
+  // Preview markers: when the admin opens a queue row the map paints the
+  // proposed marker (and for edits the original-position ghost). Anywhere
+  // else, fall back to the regular editor draft marker.
+  const previewPayload = previewSubmission
+    ? ((previewSubmission.final_payload ?? previewSubmission.payload) as Place)
+    : null;
+  const previewOriginalPlace =
+    previewSubmission?.type === "edit" && previewSubmission.target_place_id
+      ? places.find((p) => p.id === previewSubmission.target_place_id) ?? null
+      : null;
+  const inReviewMode = tab === "queue" && previewSubmission !== null;
+  const effectiveDraftMarker = inReviewMode
+    ? previewPayload && Number.isFinite(previewPayload.lat) && Number.isFinite(previewPayload.lng)
+      ? { lat: previewPayload.lat, lng: previewPayload.lng }
+      : null
+    : draftMarker;
+  const effectiveReviewOriginal =
+    inReviewMode && previewOriginalPlace
+      ? { lat: previewOriginalPlace.lat, lng: previewOriginalPlace.lng }
+      : null;
+
+  // Clear preview when leaving the queue tab so the map doesn't keep
+  // a phantom marker behind in the place/zone editors.
+  useEffect(() => {
+    if (tab !== "queue" && previewSubmission) setPreviewSubmission(null);
+  }, [tab, previewSubmission]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -387,6 +416,8 @@ export default function AdminClient() {
                 <SubmissionQueue
                   submissions={submissions}
                   places={places}
+                  previewId={previewSubmission?.id ?? null}
+                  onTogglePreview={setPreviewSubmission}
                   onApprove={approveSubmission}
                   onReject={rejectSubmission}
                   statusFilter={queueFilter}
@@ -495,7 +526,8 @@ export default function AdminClient() {
           places={places}
           zones={zones}
           editMode={editMode}
-          draftMarker={draftMarker}
+          draftMarker={effectiveDraftMarker}
+          reviewOriginal={effectiveReviewOriginal}
           draftPolygon={draftPolygon}
           drawingActive={drawingActive}
           pickingFromMap={pickingFromMap}
