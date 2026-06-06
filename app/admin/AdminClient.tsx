@@ -10,6 +10,7 @@ import SubmissionQueue, {
   type AdminSubmission,
 } from "@/components/admin/SubmissionQueue";
 import type { EditMode } from "@/components/admin/AdminMap";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 
 const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
   ssr: false,
@@ -128,6 +129,23 @@ export default function AdminClient() {
       console.warn("[admin] queue load failed", e),
     );
   }, [queueFilter, loadSubmissions]);
+
+  const refetchPlaces = useCallback(() => {
+    fetch("/api/admin/places")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setPlaces)
+      .catch(() => {});
+  }, []);
+  const refetchSubmissions = useCallback(() => {
+    loadSubmissions(queueFilter).catch(() => {});
+  }, [loadSubmissions, queueFilter]);
+
+  // Realtime: another admin (or the user themselves via approve in this tab)
+  // edits a place / sends a submission → our view updates without a refresh.
+  // Subscriptions are owned per-table so a single noisy table doesn't drown
+  // the others through one shared channel.
+  useRealtimeRefresh({ table: "submissions", onChange: refetchSubmissions });
+  useRealtimeRefresh({ table: "places", onChange: refetchPlaces });
 
   const pendingCount = useMemo(
     () => submissions.filter((s) => s.status === "pending").length,

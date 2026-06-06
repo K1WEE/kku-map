@@ -1,12 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import SearchBar from "@/components/SearchBar";
 import FilterChips from "@/components/FilterChips";
 import PlaceSheet from "@/components/PlaceSheet";
 import AuthButton from "@/components/AuthButton";
 import SuggestFab from "@/components/SuggestFab";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import type { FlyTarget } from "@/components/Map";
 import { CATEGORIES, type CategoryId, type Place, type Zone } from "@/lib/types";
 
@@ -25,6 +27,7 @@ interface Props {
 }
 
 export default function HomeClient({ places, zones }: Props) {
+  const router = useRouter();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
   const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
@@ -32,6 +35,14 @@ export default function HomeClient({ places, zones }: Props) {
   );
   const [showZones, setShowZones] = useState(true);
   const [showHint, setShowHint] = useState(true);
+
+  // Realtime: when admin approves/edits a place anywhere, every open map
+  // refreshes. router.refresh() re-runs the server component (which fetches
+  // from Supabase) without a full reload, so React state — selected place,
+  // active filters, hint — survives the update.
+  const refresh = useCallback(() => router.refresh(), [router]);
+  useRealtimeRefresh({ table: "places", onChange: refresh });
+  useRealtimeRefresh({ table: "zones", onChange: refresh });
 
   function dismissHint() {
     if (!showHint) return;
