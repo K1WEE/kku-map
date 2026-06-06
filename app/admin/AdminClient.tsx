@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import type { Place, Zone } from "@/lib/types";
 import { CATEGORY_MAP } from "@/lib/types";
 import PlaceForm from "@/components/admin/PlaceForm";
 import ZoneForm from "@/components/admin/ZoneForm";
+import SubmissionQueue, {
+  type AdminSubmission,
+} from "@/components/admin/SubmissionQueue";
 import type { EditMode } from "@/components/admin/AdminMap";
 
 const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
@@ -17,12 +20,61 @@ const AdminMap = dynamic(() => import("@/components/admin/AdminMap"), {
   ),
 });
 
-type Tab = "place" | "zone";
+type Tab = "queue" | "place" | "zone";
+type QueueFilter = "pending" | "approved" | "rejected" | "all";
+
+const QUEUE_FILTER_LABEL: Record<QueueFilter, string> = {
+  pending: "รอรีวิว",
+  approved: "อนุมัติแล้ว",
+  rejected: "ไม่อนุมัติ",
+  all: "ทั้งหมด",
+};
+
+function TabButton({
+  active,
+  onClick,
+  label,
+  count,
+  emphasizeCount = false,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  /** Use brand pill for non-zero counts (e.g. pending queue). */
+  emphasizeCount?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-sm transition ${
+        active
+          ? "bg-(--color-ink-900) text-(--color-ink-0)"
+          : "bg-(--color-ink-100) text-(--color-ink-700) hover:bg-(--color-ink-200)"
+      }`}
+    >
+      <span>{label}</span>
+      <span
+        className={`rounded-full px-1.5 py-0 text-[10px] leading-tight ${
+          emphasizeCount && count > 0
+            ? "bg-(--color-brand-600) text-white"
+            : active
+            ? "bg-(--color-ink-700) text-(--color-ink-100)"
+            : "bg-(--color-ink-200) text-(--color-ink-600)"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
 
 export default function AdminClient() {
-  const [tab, setTab] = useState<Tab>("place");
+  const [tab, setTab] = useState<Tab>("queue");
   const [places, setPlaces] = useState<Place[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
+  const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
+  const [queueFilter, setQueueFilter] = useState<QueueFilter>("pending");
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState<EditMode>({ kind: "idle" });
   const [draftMarker, setDraftMarker] = useState<{ lat: number; lng: number } | null>(null);
@@ -31,6 +83,18 @@ export default function AdminClient() {
   const [drawingActive, setDrawingActive] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  const loadSubmissions = useCallback(
+    async (filter: QueueFilter) => {
+      const res = await fetch(
+        `/api/admin/submissions?status=${encodeURIComponent(filter)}`,
+      );
+      if (!res.ok) throw new Error(`submissions: ${res.status}`);
+      setSubmissions(await res.json());
+    },
+    [],
+  );
+
+  // Load places + zones once on mount.
   useEffect(() => {
     async function load() {
       try {
@@ -54,6 +118,19 @@ export default function AdminClient() {
     }
     load();
   }, []);
+
+  // Load (and reload) submissions whenever the filter changes. Independent
+  // from the places/zones fetch so a queue blip doesn't block the editor.
+  useEffect(() => {
+    loadSubmissions(queueFilter).catch((e) =>
+      console.warn("[admin] queue load failed", e),
+    );
+  }, [queueFilter, loadSubmissions]);
+
+  const pendingCount = useMemo(
+    () => submissions.filter((s) => s.status === "pending").length,
+    [submissions],
+  );
 
   function showToast(msg: string) {
     setToast(msg);
@@ -183,6 +260,42 @@ export default function AdminClient() {
     resetEditState();
   }
 
+  async function approveSubmission(id: string) {
+    const res = await fetch(`/api/admin/submissions/${id}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `อนุมัติล้มเหลว (${res.status})`);
+    }
+    showToast("อนุมัติแล้ว");
+    // Refresh both queue and places — approved 'add' inserts a place,
+    // approved 'edit' mutates one.
+    await Promise.all([
+      loadSubmissions(queueFilter),
+      fetch("/api/admin/places")
+        .then((r) => r.json())
+        .then(setPlaces)
+        .catch(() => {}),
+    ]);
+  }
+
+  async function rejectSubmission(id: string, note: string) {
+    const res = await fetch(`/api/admin/submissions/${id}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(note ? { note } : {}),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `ไม่อนุมัติล้มเหลว (${res.status})`);
+    }
+    showToast("ไม่อนุมัติแล้ว");
+    await loadSubmissions(queueFilter);
+  }
+
   async function deleteZone(id: string) {
     const res = await fetch(`/api/admin/zones?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
@@ -208,48 +321,76 @@ export default function AdminClient() {
       <aside className="flex w-full flex-col border-b border-gray-200 bg-white md:w-96 md:border-b-0 md:border-r">
         <header className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
           <h1 className="text-sm font-semibold">KKU Maps — Admin</h1>
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-            DEV ONLY
+          <span className="rounded bg-(--color-brand-50) px-1.5 py-0.5 text-[10px] font-medium text-(--color-brand-700)">
+            ADMIN
           </span>
         </header>
 
         {!showForm && (
           <>
             <div className="flex gap-1 border-b border-gray-200 p-2">
-              <button
+              <TabButton
+                active={tab === "queue"}
+                onClick={() => setTab("queue")}
+                label="คิวรีวิว"
+                count={pendingCount}
+                emphasizeCount
+              />
+              <TabButton
+                active={tab === "place"}
                 onClick={() => setTab("place")}
-                className={`flex-1 rounded px-2 py-1.5 text-sm ${
-                  tab === "place"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              >
-                จุด ({places.length})
-              </button>
-              <button
+                label="จุด"
+                count={places.length}
+              />
+              <TabButton
+                active={tab === "zone"}
                 onClick={() => setTab("zone")}
-                className={`flex-1 rounded px-2 py-1.5 text-sm ${
-                  tab === "zone"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              >
-                โซน ({zones.length})
-              </button>
+                label="โซน"
+                count={zones.length}
+              />
             </div>
 
-            <div className="border-b border-gray-200 p-2">
-              <button
-                onClick={tab === "place" ? startAddPlace : startAddZone}
-                className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                + เพิ่ม{tab === "place" ? "จุด" : "โซน"}ใหม่
-              </button>
-            </div>
+            {tab !== "queue" && (
+              <div className="border-b border-gray-200 p-2">
+                <button
+                  onClick={tab === "place" ? startAddPlace : startAddZone}
+                  className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  + เพิ่ม{tab === "place" ? "จุด" : "โซน"}ใหม่
+                </button>
+              </div>
+            )}
+
+            {tab === "queue" && (
+              <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-2 text-[12px]">
+                <span className="mr-1 text-(--color-ink-500)">แสดง:</span>
+                {(["pending", "approved", "rejected", "all"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setQueueFilter(f)}
+                    className={`rounded-md px-2 py-0.5 transition ${
+                      queueFilter === f
+                        ? "bg-(--color-ink-900) text-(--color-ink-0)"
+                        : "bg-(--color-ink-100) text-(--color-ink-700) hover:bg-(--color-ink-200)"
+                    }`}
+                  >
+                    {QUEUE_FILTER_LABEL[f]}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-2">
               {loading ? (
                 <p className="text-center text-xs text-gray-500">กำลังโหลด…</p>
+              ) : tab === "queue" ? (
+                <SubmissionQueue
+                  submissions={submissions}
+                  places={places}
+                  onApprove={approveSubmission}
+                  onReject={rejectSubmission}
+                  statusFilter={queueFilter}
+                />
               ) : tab === "place" ? (
                 <ul className="flex flex-col gap-1">
                   {places.map((p) => {

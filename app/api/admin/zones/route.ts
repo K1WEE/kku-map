@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { zoneSchema } from "@/lib/admin/schemas";
+import { requireAdmin } from "@/lib/admin/requireAdmin";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   rowFromZone,
@@ -8,13 +9,7 @@ import {
 } from "@/lib/supabase/types";
 import type { Zone } from "@/lib/types";
 
-// See places/route.ts for the dev-only gating rationale.
-function devOnly(): NextResponse | null {
-  if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json({ error: "Not available" }, { status: 403 });
-  }
-  return null;
-}
+// See places/route.ts for the gating rationale.
 
 function validationError(issues: unknown): NextResponse {
   const list = Array.isArray(issues) ? issues : [];
@@ -32,8 +27,8 @@ function validationError(issues: unknown): NextResponse {
 }
 
 export async function GET() {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("zones")
@@ -46,8 +41,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const body = await req.json();
   const parsed = zoneSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error.issues);
@@ -66,8 +61,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const body = await req.json();
   const parsed = zoneSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error.issues);
@@ -89,8 +84,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "missing id" }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { placeSchema } from "@/lib/admin/schemas";
+import { requireAdmin } from "@/lib/admin/requireAdmin";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   placeFromRow,
@@ -11,19 +12,10 @@ import type { Place } from "@/lib/types";
 /**
  * Admin CRUD over the `places` table.
  *
- * Currently dev-only — Phase 4 will swap this for Supabase-auth gating
- * (signed-in user + profile.is_admin). For now we keep the existing dev
- * workflow working while data moves to Postgres.
- *
- * Uses the service-role client to bypass RLS. The dev-only guard is what
- * keeps this safe in production until Phase 4 lands.
+ * Gated by `profiles.is_admin` (via `requireAdmin`). Mutations use the
+ * service-role client to bypass RLS, but the guard is the authoritative
+ * check — RLS is the second line of defense, not the first.
  */
-function devOnly(): NextResponse | null {
-  if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json({ error: "Not available" }, { status: 403 });
-  }
-  return null;
-}
 
 function validationError(issues: unknown): NextResponse {
   const list = Array.isArray(issues) ? issues : [];
@@ -41,8 +33,8 @@ function validationError(issues: unknown): NextResponse {
 }
 
 export async function GET() {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("places")
@@ -55,8 +47,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const body = await req.json();
   const parsed = placeSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error.issues);
@@ -76,8 +68,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const body = await req.json();
   const parsed = placeSchema.safeParse(body);
   if (!parsed.success) return validationError(parsed.error.issues);
@@ -99,8 +91,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const guard = devOnly();
-  if (guard) return guard;
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "missing id" }, { status: 400 });
