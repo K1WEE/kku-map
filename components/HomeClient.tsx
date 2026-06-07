@@ -136,7 +136,7 @@ export default function HomeClient({ places, zones }: Props) {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-(--z-chrome) px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="pointer-events-auto mx-auto max-w-screen-sm sm:max-w-3xl">
+        <div className="pointer-events-auto mx-auto max-w-screen-sm sm:w-fit sm:max-w-3xl">
           <FilterChips
             active={activeCategories}
             onToggle={toggleCategory}

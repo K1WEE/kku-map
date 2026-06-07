@@ -169,42 +169,38 @@ export default function FilterChips({
       </div>
 
       <div
-        className="flex items-stretch gap-1.5 rounded-2xl bg-(--color-ink-0) p-1.5 shadow-[0_6px_20px_-8px_oklch(0.2_0.05_25/0.25)] ring-1 ring-(--color-ink-200)"
+        className="flex items-stretch justify-between gap-1 sm:justify-start sm:gap-1.5"
         role="group"
         aria-label="ตัวกรองหมวด"
       >
-        <div className="flex flex-1 items-center justify-between gap-1 sm:justify-start sm:gap-1.5">
-          {CATEGORIES.map((c) => {
-            const on = active.has(c.id);
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => onToggle(c.id)}
-                aria-pressed={on}
-                aria-label={c.label}
-                title={c.label}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium transition-[background,color] duration-150 sm:w-auto sm:px-3 sm:py-2 ${
-                  on
-                    ? "text-white"
-                    : "bg-(--color-ink-50) text-(--color-ink-600) ring-1 ring-inset ring-(--color-ink-200)"
-                } focus-visible:ring-focus`}
-                style={on ? { background: c.color } : { color: c.color }}
+        {CATEGORIES.map((c) => {
+          const on = active.has(c.id);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onToggle(c.id)}
+              aria-pressed={on}
+              aria-label={c.label}
+              title={c.label}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium shadow-[0_4px_12px_-4px_oklch(0.2_0.05_25/0.30)] transition-[background,color] duration-150 sm:w-auto sm:px-3 sm:py-2 ${
+                on
+                  ? "text-white"
+                  : "bg-(--color-ink-0) text-(--color-ink-700) ring-1 ring-inset ring-(--color-ink-200)"
+              } focus-visible:ring-focus`}
+              style={on ? { background: c.color } : { color: c.color }}
+            >
+              <Glyph id={c.id} size={18} />
+              <span
+                className={`hidden sm:inline ${
+                  on ? "text-white" : "text-(--color-ink-700)"
+                }`}
               >
-                <Glyph id={c.id} size={18} />
-                <span
-                  className={`hidden sm:inline ${
-                    on ? "text-white" : "text-(--color-ink-700)"
-                  }`}
-                >
-                  {c.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <span aria-hidden className="my-1 w-px shrink-0 bg-(--color-ink-200)" />
+                {c.label}
+              </span>
+            </button>
+          );
+        })}
 
         <button
           type="button"
@@ -212,10 +208,10 @@ export default function FilterChips({
           aria-pressed={showZones}
           aria-label="แสดงพื้นที่คณะ"
           title="พื้นที่คณะ"
-          className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium transition-colors duration-150 sm:px-3 sm:py-2 ${
+          className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium shadow-[0_4px_12px_-4px_oklch(0.2_0.05_25/0.30)] transition-colors duration-150 sm:px-3 sm:py-2 ${
             showZones
               ? "bg-(--color-ink-800) text-(--color-ink-0)"
-              : "bg-(--color-ink-50) text-(--color-ink-600) ring-1 ring-inset ring-(--color-ink-200)"
+              : "bg-(--color-ink-0) text-(--color-ink-700) ring-1 ring-inset ring-(--color-ink-200)"
           } w-10 sm:w-auto focus-visible:ring-focus`}
         >
           <svg
@@ -244,10 +240,10 @@ export default function FilterChips({
           aria-controls="kku-filter-legend"
           aria-label="คำอธิบายไอคอน"
           title="คำอธิบายไอคอน"
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors duration-150 sm:hidden ${
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl shadow-[0_4px_12px_-4px_oklch(0.2_0.05_25/0.30)] transition-colors duration-150 sm:hidden ${
             legendOpen
               ? "bg-(--color-brand-600) text-white"
-              : "bg-(--color-ink-50) text-(--color-ink-600) ring-1 ring-inset ring-(--color-ink-200)"
+              : "bg-(--color-ink-0) text-(--color-ink-700) ring-1 ring-inset ring-(--color-ink-200)"
           } focus-visible:ring-focus`}
         >
           <svg

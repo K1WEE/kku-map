@@ -49,28 +49,35 @@ function chipIcon(place: Place, selected: boolean) {
   });
 }
 
-function dotIcon(place: Place, selected: boolean) {
+/**
+ * Bare category glyph used at the cluster→chip transition (z15-16).
+ * No frame — just the Lucide path in the category color, with a white halo
+ * so it stays legible over any basemap tile. Selection still upgrades to the
+ * full chipIcon below.
+ */
+function glyphIcon(place: Place) {
   const cat = CATEGORY_MAP[place.category];
-  const size = selected ? 18 : 14;
+  const size = 26;
+  const inner = glyphSvg(place.category, { size: 22, color: cat.color });
   return L.divIcon({
     className: "kku-marker",
     html: `
       <div style="
         width:${size}px;height:${size}px;
-        border-radius:50%;
-        background:${cat.color};
-        box-shadow:
-          0 0 0 2px white,
-          ${SHADOW}${selected ? `, 0 0 0 4px ${BRAND_RING}` : ""};
-        transition:box-shadow 180ms cubic-bezier(0.25,1,0.5,1);
-      "></div>`,
+        display:grid;place-items:center;
+        filter:
+          drop-shadow(0 0 2px white)
+          drop-shadow(0 0 2px white)
+          drop-shadow(0 1px 1.5px oklch(0.2 0.04 25 / 0.45));
+      ">${inner}</div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
 }
 
 function iconFor(place: Place, selected: boolean, zoom: number) {
-  return zoom >= CHIP_AT ? chipIcon(place, selected) : dotIcon(place, selected);
+  if (selected) return chipIcon(place, true);
+  return zoom >= CHIP_AT ? chipIcon(place, false) : glyphIcon(place);
 }
 
 function clusterIcon(count: number) {
@@ -191,7 +198,7 @@ function MarkersLayer({
   const map = useMap();
   const groupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
-  const tierRef = useRef<"chip" | "dot">("dot");
+  const tierRef = useRef<"chip" | "glyph">("glyph");
 
   // Build / rebuild the cluster group whenever the filtered set changes.
   useEffect(() => {
@@ -221,7 +228,7 @@ function MarkersLayer({
     map.addLayer(group);
     groupRef.current = group;
     markersRef.current = markerById;
-    tierRef.current = zoom >= CHIP_AT ? "chip" : "dot";
+    tierRef.current = zoom >= CHIP_AT ? "chip" : "glyph";
 
     return () => {
       map.removeLayer(group);
@@ -234,7 +241,7 @@ function MarkersLayer({
   useEffect(() => {
     const refresh = () => {
       const z = map.getZoom();
-      const tier: "chip" | "dot" = z >= CHIP_AT ? "chip" : "dot";
+      const tier: "chip" | "glyph" = z >= CHIP_AT ? "chip" : "glyph";
       if (tier === tierRef.current) return;
       tierRef.current = tier;
       const visible = places.filter((p) => activeCategories.has(p.category));
