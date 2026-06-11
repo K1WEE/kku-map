@@ -10,7 +10,13 @@ import AuthButton from "@/components/AuthButton";
 import SuggestFab from "@/components/SuggestFab";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import type { FlyTarget } from "@/components/Map";
-import { CATEGORIES, type CategoryId, type Place, type Zone } from "@/lib/types";
+import {
+  CATEGORIES,
+  type CategoryId,
+  type Place,
+  type RoomLocation,
+  type Zone,
+} from "@/lib/types";
 
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
@@ -29,6 +35,10 @@ interface Props {
 export default function HomeClient({ places, zones }: Props) {
   const router = useRouter();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  // Floor/room when the place was reached via a room code; null for a plain
+  // marker tap or building search. Cleared on every openPlace so a later tap
+  // doesn't keep a stale room from an earlier code.
+  const [selectedRoom, setSelectedRoom] = useState<RoomLocation | null>(null);
   const [flyTarget, setFlyTarget] = useState<FlyTarget | null>(null);
   const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
     () => new Set(CATEGORIES.map((c) => c.id)),
@@ -50,11 +60,15 @@ export default function HomeClient({ places, zones }: Props) {
     setShowHint(false);
   }
 
-  function openPlace(place: Place, opts: { zoom?: number } = {}) {
+  function openPlace(
+    place: Place,
+    opts: { zoom?: number; room?: RoomLocation } = {},
+  ) {
     if (!activeCategories.has(place.category)) {
       setActiveCategories((prev) => new Set(prev).add(place.category));
     }
     setSelectedPlace(place);
+    setSelectedRoom(opts.room ?? null);
     setFlyTarget({
       kind: "place",
       placeId: place.id,
@@ -116,7 +130,7 @@ export default function HomeClient({ places, zones }: Props) {
               <SearchBar
                 places={places}
                 zones={zones}
-                onSelectPlace={(p) => openPlace(p, { zoom: 18 })}
+                onSelectPlace={(p, room) => openPlace(p, { zoom: 18, room })}
                 onSelectZone={openZone}
               />
             </div>
@@ -152,7 +166,11 @@ export default function HomeClient({ places, zones }: Props) {
 
       <SuggestFab />
 
-      <PlaceSheet place={selectedPlace} onClose={() => setSelectedPlace(null)} />
+      <PlaceSheet
+        place={selectedPlace}
+        room={selectedRoom}
+        onClose={() => setSelectedPlace(null)}
+      />
     </main>
   );
 }

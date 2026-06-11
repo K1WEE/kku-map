@@ -38,6 +38,16 @@ export const CATEGORIES: Category[] = [
   { id: "landmark", label: "จุดสำคัญ", icon: "📍", color: "oklch(0.56 0.16 350)" },
 ];
 
+/**
+ * A floor/room parsed from a room code (EN140302). Carried alongside a
+ * selected building so the place sheet can echo "ชั้น 3 · ห้อง 2" — there is
+ * no per-room geometry, the building is still the navigation target.
+ */
+export interface RoomLocation {
+  floor: number;
+  room?: number;
+}
+
 export interface Zone {
   id: string;
   name: string;

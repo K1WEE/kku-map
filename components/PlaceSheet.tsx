@@ -2,15 +2,16 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { CATEGORY_MAP, type Place } from "@/lib/types";
+import { CATEGORY_MAP, type Place, type RoomLocation } from "@/lib/types";
 import Glyph from "./Glyph";
 
 interface Props {
   place: Place | null;
+  room?: RoomLocation | null;
   onClose: () => void;
 }
 
-export default function PlaceSheet({ place, onClose }: Props) {
+export default function PlaceSheet({ place, room, onClose }: Props) {
   useEffect(() => {
     if (!place) return;
     function onKey(e: KeyboardEvent) {
@@ -94,6 +95,47 @@ export default function PlaceSheet({ place, onClose }: Props) {
               <p className="mt-1 text-sm text-(--color-ink-500)">
                 {place.nameEn}
               </p>
+            )}
+
+            {room && (
+              <div className="mt-3.5 flex items-center gap-3 rounded-2xl bg-(--color-brand-50) px-3.5 py-3 ring-1 ring-(--color-brand-200)">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-(--color-brand-600) text-white">
+                  <svg
+                    width={19}
+                    height={19}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M3 21h18 M5 21V5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v16" />
+                    <path d="M15 12h.01" />
+                  </svg>
+                </span>
+                <div className="flex min-w-0 flex-1 items-baseline gap-x-4 gap-y-0.5">
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="text-[12px] font-medium text-(--color-brand-700)">
+                      ชั้น
+                    </span>
+                    <span className="text-lg font-semibold leading-none text-(--color-brand-800)">
+                      {room.floor}
+                    </span>
+                  </span>
+                  {room.room != null && (
+                    <span className="flex items-baseline gap-1.5">
+                      <span className="text-[12px] font-medium text-(--color-brand-700)">
+                        ห้อง
+                      </span>
+                      <span className="text-lg font-semibold leading-none text-(--color-brand-800)">
+                        {room.room}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
             )}
 
             {place.description && (

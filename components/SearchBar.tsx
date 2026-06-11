@@ -2,13 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { buildIndex, searchAll, type SearchResult } from "@/lib/search";
-import { CATEGORY_MAP, type Place, type Zone } from "@/lib/types";
+import {
+  CATEGORY_MAP,
+  type Place,
+  type RoomLocation,
+  type Zone,
+} from "@/lib/types";
 import Glyph from "./Glyph";
 
 interface Props {
   places: Place[];
   zones: Zone[];
-  onSelectPlace: (place: Place) => void;
+  onSelectPlace: (place: Place, room?: RoomLocation) => void;
   onSelectZone: (zone: Zone) => void;
 }
 
@@ -50,8 +55,11 @@ export default function SearchBar({
     if (result.kind === "zone") {
       onSelectZone(result.zone);
       setQuery(result.zone.name);
+    } else if (result.kind === "room") {
+      // Navigates to the building, but carries floor/room so the sheet echoes it
+      onSelectPlace(result.place, { floor: result.floor, room: result.room });
+      setQuery(result.place.name);
     } else {
-      // place + room both navigate to the building place
       onSelectPlace(result.place);
       setQuery(result.place.name);
     }
