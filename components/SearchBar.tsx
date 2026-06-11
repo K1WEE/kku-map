@@ -47,12 +47,13 @@ export default function SearchBar({
   }, [active, showDropdown]);
 
   function handleSelect(result: SearchResult) {
-    if (result.kind === "place") {
-      onSelectPlace(result.place);
-      setQuery(result.place.name);
-    } else {
+    if (result.kind === "zone") {
       onSelectZone(result.zone);
       setQuery(result.zone.name);
+    } else {
+      // place + room both navigate to the building place
+      onSelectPlace(result.place);
+      setQuery(result.place.name);
     }
     setOpen(false);
     inputRef.current?.blur();
@@ -126,7 +127,7 @@ export default function SearchBar({
           }}
           onBlur={() => setFocused(false)}
           onKeyDown={handleKey}
-          placeholder="ค้นหาตึก เช่น EN04, ตึกวิศวะ 4"
+          placeholder="ค้นหาตึกหรือรหัสห้อง เช่น EN04, EN140302"
           className="min-w-0 flex-1 bg-transparent text-base text-(--color-ink-800) placeholder:text-(--color-ink-400) focus:outline-none"
         />
         {query && (
@@ -193,6 +194,12 @@ export default function SearchBar({
                   >
                     {r.kind === "place" ? (
                       <PlaceResultRow place={r.place} />
+                    ) : r.kind === "room" ? (
+                      <RoomResultRow
+                        place={r.place}
+                        floor={r.floor}
+                        room={r.room}
+                      />
                     ) : (
                       <ZoneResultRow zone={r.zone} />
                     )}
@@ -208,8 +215,14 @@ export default function SearchBar({
 }
 
 function resultId(r: SearchResult): string {
-  return r.kind === "place" ? r.place.id : r.zone.id;
+  if (r.kind === "zone") return r.zone.id;
+  if (r.kind === "room") {
+    return `${r.place.id}-${r.floor}-${r.room ?? ""}`;
+  }
+  return r.place.id;
 }
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
 
 function PlaceResultRow({ place }: { place: Place }) {
   const cat = CATEGORY_MAP[place.category];
@@ -233,6 +246,61 @@ function PlaceResultRow({ place }: { place: Place }) {
       </span>
       <span className="shrink-0 rounded-md bg-(--color-ink-100) px-1.5 py-0.5 font-mono text-[10px] text-(--color-ink-600)">
         {place.id}
+      </span>
+    </>
+  );
+}
+
+/**
+ * Room result is a parsed code (EN140302) resolved to its building. The main
+ * line stays the building name — that's the place we actually navigate to —
+ * while the secondary line surfaces the floor/room the code encodes, with a
+ * door glyph so it reads as "go inside here" rather than a plain marker.
+ */
+function RoomResultRow({
+  place,
+  floor,
+  room,
+}: {
+  place: Place;
+  floor: number;
+  room?: number;
+}) {
+  const cat = CATEGORY_MAP[place.category];
+  return (
+    <>
+      <span
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
+        style={{ background: cat?.color ?? "var(--color-ink-400)" }}
+      >
+        <svg
+          width={18}
+          height={18}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M3 21h18 M5 21V5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v16" />
+          <path d="M15 12h.01" />
+        </svg>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-medium text-(--color-ink-800)">
+          {place.name}
+        </span>
+        <span className="block truncate text-xs text-(--color-ink-500)">
+          ชั้น {floor}
+          {room != null ? ` · ห้อง ${room}` : ""}
+        </span>
+      </span>
+      <span className="shrink-0 rounded-md bg-(--color-ink-100) px-1.5 py-0.5 font-mono text-[10px] text-(--color-ink-600)">
+        {place.id}
+        {pad2(floor)}
+        {room != null ? pad2(room) : ""}
       </span>
     </>
   );
